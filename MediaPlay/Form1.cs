@@ -2,20 +2,26 @@
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Reflection;
+using System.IO;
+using MediaPlay.Properties;
+using System.Media;
 
 namespace MediaPlay {
 	public partial class frmMediaPlayer : Form {
 		private bool isOpen = false;
 		private bool isPlaying = false;
 		private bool isPaused = true;
-		private string midiFile = "Entry of the Gladiators.mid";
+		private string midiFile = "Entry_of_the_Gladiators.mid";
 
 		[DllImport("winmm.dll")]
 		private static extern long mciSendString(string strCommand, StringBuilder strReturn, int iReturnLength, IntPtr hwndCallback);
 
 		public frmMediaPlayer() {
-			InitializeComponent();
 			Open();
+			Play();
+			Pause();
+			InitializeComponent();
 		}
 
 		private long mciSendString(string command) {
@@ -38,12 +44,23 @@ namespace MediaPlay {
 		}
 
 		private void Open() {
-			mciSendString("open \"" + midiFile + "\" type mpegvideo alias MediaFile");
+			using (var midiStream = new MemoryStream(Resources.Entry_of_the_Gladiators)) {
+				var data = midiStream.ToArray();
+				try {
+					using (var fs = new FileStream(midiFile, FileMode.CreateNew, FileAccess.Write)) {
+						fs.Write(data, 0, data.Length);
+					}
+				}
+				catch (IOException) { }
+				mciSendString("open \"" + Application.StartupPath + "/" + midiFile + "\" type mpegvideo alias MediaFile");
+			}
 			isOpen = true;
+			isPlaying = false;
+			isPaused = true;
 		}
 
 		private void Play() {
-			mciSendString("play MediaFile REPEAT", null, 0, IntPtr.Zero);
+			mciSendString("play MediaFile REPEAT");
 			isPlaying = true;
 		}
 
@@ -54,7 +71,7 @@ namespace MediaPlay {
 		}
 
 		private void Resume() {
-			mciSendString("resume MediaFile", null, 0, IntPtr.Zero);
+			mciSendString("resume MediaFile");
 			isPlaying = true;
 			isPaused = false;
 		}
@@ -67,6 +84,7 @@ namespace MediaPlay {
 
 		private void DisposeMidi() {
 			mciSendString("close MediaFile");
+			File.Delete(midiFile);
 			isOpen = false;
 		}
 
@@ -76,7 +94,7 @@ namespace MediaPlay {
 
 		private void btnStop_Click(object sender, EventArgs e) {
 			DisposeMidi();
-			Open();
+			//Open();
 		}
 
 		private void frmMediaPlayer_FormClosing(object sender, FormClosingEventArgs e) {

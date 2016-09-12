@@ -59,5 +59,15 @@ namespace MediaPlay.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Sucht eine lokalisierte Ressource vom Typ System.Byte[].
+        /// </summary>
+        public static byte[] Entry_of_the_Gladiators {
+            get {
+                object obj = ResourceManager.GetObject("Entry_of_the_Gladiators", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
